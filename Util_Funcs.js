@@ -1,5 +1,22 @@
 'use strict';
-function drawEllipse(cnvs2d, x, y, radX, radY, color, type = 'fill', lnWid = 1, shdw = null) {
+// DOM Functions
+function crtElem(pe, ne, {cont = undefined, props = undefined, evnts = undefined} = undefined) {
+	const elem = document.createElement(ne);
+	pe.appendChild(elem);
+	if (cont) {elem.appendChild(document.createTextNode(cont));}
+	if (props) {
+		for (let {prop, subprop = undefined, val} of props) {
+	    if (prop === 'style') {elem[prop][subprop] = val;}
+	    else {elem[prop] = val;}
+	  }
+	}
+	if (evnts) {for (let {type, func, argLst = undefined} of evnts) {
+		elem.addEventListener(type, () => {func(argLst);});
+	}}
+  return elem;
+}
+// Drawing Functions
+function drawEllipse(cnvs2d, x, y, radX, radY, color, type = 'fill', lnWid = 1, shdw = undefined) {
 	cnvs2d[type + 'Style'] = color;
 	if (type === 'stroke') {cnvs2d.lineWidth = lnWid;}
 	if (shdw) {

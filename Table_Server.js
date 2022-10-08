@@ -3,7 +3,7 @@ const http = require('http');
 const fs = require('fs');
 
 let htmlFile, cssFile, jsFiles = [];
-let jsFileNames = ['Main.js', 'Player.js', 'Table.js', 'Draw_Util.js'];
+let jsFileNames = ['Main.js', 'Player.js', 'Menu_Bar.js', 'Table.js', 'Util_Funcs.js'];
 fs.readFile('index.html', (err, data) => {
   if (err) {console.error('index.html is not in that directory.');}
   else {htmlFile = data;}

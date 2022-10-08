@@ -1,36 +1,31 @@
 class Table {
-  #mnbr;  #wrap;  #cnvs;  #cnvs2d;  #mnbrP;  #wrapP;
+  #wp;  #tblBar;  #mnBar;  #cnvs;  #cnvs2d;
   #fllTbl;  #grdTbl;  #hdTbl;  #clsTbl;  #fllMn;  #grdMn;  #hdMn;  #clsMn;
-  #plyrCnt;  #plyrArr;  plyrTurn;  #chpCnt;
+  #plyrCnt;  #plyrArr;  #plyrTurn;  #chpCnt;
+
   //
   #wagerFormat;  #bettingStructure;  #royaltyStructure;
   #minBet;  #pot;  #currBet;  #minRaise;
   #cardFormat;
   // //
+
   #shwChps;  #plyrTxtIntrvl;
-  constructor(pc = 9, cc = 10000, wf = 'bets', mb = 2, cf = 'poker') {
+  constructor(pc = 9, cc = 10000, wf = 'bets', mnbt = 2, cf = 'poker') {
     this.#plyrCnt = pc;  this.#plyrArr = [];  this.#plyrTurn = 0;  this.#chpCnt = cc;
+
     //
   	this.#wagerFormat = wf;  this.#bettingStructure = null;  this.#royaltyStructure = null;
-    this.#minBet = mb;  this.#pot = 0;  this.#currBet = 0;  this.#minRaise = this.#minBet;
+    this.#minBet = mnbt;  this.#pot = 0;  this.#currBet = 0;  this.#minRaise = this.#minBet;
     this.#cardFormat = cf;
     // //
+
     this.#shwChps = false;
-    this.#mnbr = this.setupElem(cnvsMenu, 'div', 'cnvsMnbr');
-    this.#mnbrP = this.setupElem(this.#mnbr, 'p', 'mnbrP', tbleArr.length+1);
-    this.#wrap = this.setupElem(cnvsTrgt, 'div', 'cnvsWrap');
-    this.#wrap.style.position = 'static';
-    this.#wrapP = this.setupElem(this.#wrap, 'p', 'wrapP', tbleArr.length+1);
-    this.#cnvs = this.setupElem(this.#wrap, 'canvas', 'cnvs');
+    this.#wp = crtElem(cnvsTrgt, 'div', {props: [{prop: 'className', val: 'cnvsWrap'}]});
+    this.#wp.style.position = 'static';
+    this.#cnvs = crtElem(this.#wp, 'canvas', {props: [{prop: 'className', val: 'cnvs'}]});
     this.#cnvs2d = this.#cnvs.getContext('2d');
-    this.#fllTbl = this.setBttn(this.#wrap,'cnvsFull',['#0f0','#f0f','absolute',(a)=>{return a;},'grid',1]);
-    this.#grdTbl = this.setBttn(this.#wrap,'cnvsGrid',['#00f','#ff0','static',(a)=>{return a;},'grid',1]);
-    this.#hdTbl = this.setBttn(this.#wrap,'cnvsHide',['#ff0','#00f','static',(a)=>{return !a;},'none',-1]);
-    this.#clsTbl = this.setBttn(this.#wrap, 'cnvsClose');
-    this.#fllMn = this.setBttn(this.#mnbr,'menuFull',['#0f0','#f0f','absolute',(a)=>{return a;},'grid',1]);
-    this.#grdMn = this.setBttn(this.#mnbr,'menuGrid',['#00f','#ff0','static',(a)=>{return a;},'grid',1]);
-    this.#hdMn = this.setBttn(this.#mnbr,'menuHide',['#ff0','#00f','static',(a)=>{return !a;},'none',-1]);
-    this.#clsMn = this.setBttn(this.#mnbr, 'menuClose');
+    this.#tblBar = new MenuBar(this, this.#wp);
+    this.#mnBar = new MenuBar(this, cnvsMenu);
     this.#plyrTxtIntrvl = setInterval(() => {
   		this.#shwChps = !this.#shwChps;
   		this.drawPlayers(this, this.#plyrArr, 'red', 'white', this.#shwChps);
@@ -44,10 +39,11 @@ class Table {
     });
   }
   // Common Value Shortcuts
+  get mb() {return this.#mnBar;}
+  get wp() {return this.#wp;}
   get cvw() {return this.#cnvs.width/2;}
   get cvh() {return this.#cnvs.height/2;}
   get bw() {return Math.min(this.#cnvs.width/2, this.#cnvs.height/2)/9;}
-
 
   // Players Turn
   clearAllTurns() {for (let pa of this.#plyrArr) {pa.notTurn();}}
@@ -63,48 +59,11 @@ class Table {
   }
   // // Players Turn
 
-
-  // Table and UI Building Utility Functions
-  setBttn(pe, cn, ao = null, txt = null) {
-    const nb = this.setupElem(pe, 'button', cn, txt);
-    if (ao) {nb.addEventListener('click', () => {this.sizeTble(ao);});}
-    else {nb.addEventListener('click', () => {this.sizeClose();});}
-    return nb;
-  }
-  setupElem(pe, et, cn, txt = null) {
-    const ne = document.createElement(et);
-    pe.appendChild(ne);
-    ne.className = cn;
-    if (txt) {ne.appendChild(document.createTextNode(txt));}
-    return ne;
-  }
-  // Button Callback Functions
-  sizeTble([bgc, clr, pos, tdp, sdp, inc]) {
-    this.#mnbr.style.backgroundColor = bgc;
-    this.#mnbr.style.color = clr;
-    this.#wrap.style.position = pos;
-    if (tdp(this.#wrap.style.display === 'none')) {
-      this.#wrap.style.display = sdp;
-      vsblTbls += inc;
-    }
-    for (let tbl of tbleArr) {tbl.resizeCanvas();}
-  }
-  sizeClose() {
-    this.#wrap.style.position = 'static';
-    if (this.#wrap.style.display !== 'none') {vsblTbls--;}
-    this.#mnbr.parentNode.removeChild(this.#mnbr);
-    this.#wrap.parentNode.removeChild(this.#wrap);
-    for (let tbl = tbleArr.length-1; tbl >= 0; tbl--) {if (tbleArr[tbl] === this) {
-      tbleArr.splice(tbl, 1);
-      break;
-    }}
-    for (let tbl of tbleArr) {tbl.resizeCanvas();}
-  }
   // Tables Main Focal Point Function
   resizeCanvas() {
-    if (this.#wrap.style.display !== 'none') {
-      if (this.#wrap.style.position === 'static' && vsblTbls > 0) {this.fitCanvas(Math.ceil(Math.sqrt(vsblTbls)));}
-      else if (this.#wrap.style.position === 'absolute' && vsblTbls > 0) {this.fitCanvas(1);}
+    if (this.#wp.style.display !== 'none') {
+      if (this.#wp.style.position === 'static' && vsblTbls > 0) {this.fitCanvas(Math.ceil(Math.sqrt(vsblTbls)));}
+      else if (this.#wp.style.position === 'absolute' && vsblTbls > 0) {this.fitCanvas(1);}
       let plyrPosArr = this.calcPlayerPos();
     	for (let i = 0; i < this.#plyrCnt; i++) {
     		if (!this.#plyrArr[i]) {this.#plyrArr[i] = new Player(this, 0, 0, this.#chpCnt);}
@@ -124,13 +83,14 @@ class Table {
     if (mnwc/tmpVl*window.innerHeight*4/5 > 100/tempVal*window.innerWidth) {this.fitToGrid(tmpVl, tempVal, mnwc);}
     this.#cnvs.width = this.#cnvs.clientWidth;
   	this.#cnvs.height = this.#cnvs.clientHeight;
-    this.#wrapP.style.fontSize = this.#cnvs.height/20 + 'px';
+
+    this.#tblBar.wp.style.fontSize = this.#cnvs.height/20 + 'px';
   }
   fitToGrid(wd, ht, mnwc) {
-    this.#wrap.style.width = `calc(${100/wd}vw - ${wd-1}px)`;
-    this.#wrap.style.height = `calc(${mnwc/ht}vh - ${ht-1}px)`;
-    cnvsTrgt.style.gridTemplateColumns = `repeat(${wd}, ${this.#wrap.style.width})`;
-    cnvsTrgt.style.gridTemplateRows = `repeat(${ht}, ${this.#wrap.style.height})`;
+    this.#wp.style.width = `calc(${100/wd}vw - ${wd-1}px)`;
+    this.#wp.style.height = `calc(${mnwc/ht}vh - ${ht-1}px)`;
+    cnvsTrgt.style.gridTemplateColumns = `repeat(${wd}, ${this.#wp.style.width})`;
+    cnvsTrgt.style.gridTemplateRows = `repeat(${ht}, ${this.#wp.style.height})`;
   }
   // Space Players Out Evenly at Table
   calcPlayerPos() {
