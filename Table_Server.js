@@ -2,69 +2,64 @@
 const http = require('http');
 const fs = require('fs');
 
-let htmlFile, cssFile, jsFiles = [];
-let jsFileNames = ['Main.js', 'Player.js', 'Menu_Bar.js', 'Table.js', 'Util_Funcs.js'];
-fs.readFile('index.html', (err, data) => {
-  if (err) {console.error('index.html is not in that directory.');}
-  else {htmlFile = data;}
-});
-fs.readFile('Layout.css', (err, data) => {
-  if (err) {console.error('Layout.css is not in that directory.');}
-  else {cssFile = data;}
-});
-for (let jsfn of jsFileNames) {
-  fs.readFile(jsfn, (err, data) => {
-    if (err) {console.error(`${jsfn} is not in that directory.`);}
-    else {jsFiles.push(data);}
-  });
+async function runServer() {
+  const fileObj = await loadFiles();
+  startServer(fileObj);
+}
+async function loadFiles() {
+  const fileObj = {html: [{str: 'index.html'}], css: [{str: 'Layout.css'}],
+    js: [{str: 'Main.js'},{str: 'Player.js'},{str: 'Menu_Bar.js'},{str: 'Table.js'},{str: 'Util_Funcs.js'}]};
+  try {for (let tp of [fileObj.html, fileObj.css, fileObj.js]) {await loadFileType(tp);}}
+  catch (err) {console.error(`${err}`);}
+  return fileObj;
+}
+async function loadFileType(fileType) {
+  let flPrms;
+  for (let obj of fileType) {
+    flPrms = await fs.promises.readFile(obj.str);
+    obj.data = flPrms;
+  }
+}
+function startServer({html, css, js}) {
+  const port = 8080;
+  const server = http.createServer((req, res) => {
+    const {method, url, headers} = req;
+    let body = [];
+    req.on('error', (err) => {
+      console.error(err);
+    }).on('data', (chunk) => {
+      body.push(chunk);
+    }).on('end', () => {
+      body = Buffer.concat(body).toString();
+      res.on('error', (err) => {console.error(err);});
+      let urlFnd = false;
+      if (url.endsWith('.js')) {urlFnd = findFile(res, url, js, 'text/javascript');}
+      else if (!urlFnd && url.endsWith('.css')) {urlFnd = findFile(res, url, css, 'text/css');}
+      else if (!urlFnd && url.endsWith('.html')) {urlFnd = findFile(res, url, html, 'text/html');}
+      if (!urlFnd) {
+        if (html[0].data) {
+          res.writeHead(200, {'Content-Type': 'text/html'});
+          res.end(html[0].data);
+        } else {
+          res.statusCode = 404;
+          res.end();
+        }
+      }
+    });
+  }).listen(port);
+}
+function findFile(res, url, files, mmtp) {
+  for (let fls = 0; fls < files.length; fls++) {if (url === '/' + files[fls].str) {
+    if (files[fls].data) {
+      res.writeHead(200, {'Content-Type': mmtp});
+      res.end(files[fls].data);
+    } else {
+      res.statusCode = 404;
+      res.end();
+    }
+    return true;
+  }}
+  return false;
 }
 
-const port = 8080;
-const server = http.createServer((req, res) => {
-  const {method, url, headers} = req;
-  let body = [];
-  req.on('error', (err) => {
-    console.error(err);
-  }).on('data', (chunk) => {
-    body.push(chunk);
-  }).on('end', () => {
-    body = Buffer.concat(body).toString();
-    res.on('error', (err) => {console.error(err);});
-
-    let urlFound = false;
-    if (url.endsWith('.js')) {for (let jsf = 0; jsf < jsFileNames.length; jsf++) {
-      if (url === '/' + jsFileNames[jsf]) {
-        if (jsFiles[jsf]) {
-          res.writeHead(200, {'Content-Type': 'text/javascript'});
-          res.end(jsFiles[jsf]);
-        } else {
-          res.statusCode = 404;
-          res.end();
-        }
-        urlFound = true;
-        break;
-      }
-    }}
-    else if (url.endsWith('.css')) {
-      if (url === '/Layout.css') {
-        if (cssFile) {
-          res.writeHead(200, {'Content-Type': 'text/css'});
-          res.end(cssFile);
-        } else {
-          res.statusCode = 404;
-          res.end();
-        }
-        urlFound = true;
-      }
-    }
-    if (!urlFound) {
-      if (htmlFile) {
-        res.writeHead(200, {'Content-Type': 'text/html'});
-        res.end(htmlFile);
-      } else {
-        res.statusCode = 404;
-        res.end();
-      }
-    }
-  });
-}).listen(port);
+runServer();

@@ -38,9 +38,10 @@ class Table {
       this.setTurn();
     });
   }
-  // Common Value Shortcuts
+  // Accessors
   get mb() {return this.#mnBar;}
   get wp() {return this.#wp;}
+  // Common Value Shortcuts
   get cvw() {return this.#cnvs.width/2;}
   get cvh() {return this.#cnvs.height/2;}
   get bw() {return Math.min(this.#cnvs.width/2, this.#cnvs.height/2)/9;}

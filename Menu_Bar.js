@@ -17,7 +17,7 @@ class MenuBar {
       s = crtElem(p, t, {cont:x, props:[{prop:'className', val:c}], evnts:[{type:'click', func:f, argLst: a}]});
     }
   }
-
+  // Accessors
   get wp() {return this.#wrap;}
 
   sizeTble([tble, bgc, clr, pos, tdp, sdp, inc]) {
