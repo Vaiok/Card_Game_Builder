@@ -1,25 +1,18 @@
 class Table {
-  #wp;  #tblBar;  #mnBar;  #cnvs;  #cnvs2d;
-  #fllTbl;  #grdTbl;  #hdTbl;  #clsTbl;  #fllMn;  #grdMn;  #hdMn;  #clsMn;
-  #plyrCnt;  #plyrArr;  #plyrTurn;  #chpCnt;
+  #wp;  #tblBar;  #mnBar;  #cnvs;  #cnvs2d;  #raker;  #dealer;
+  #plyrCnt;  #plyrArr;
+  #plyrsInHnd;  #plyrTurn;  #plyrBttn;
+  #actPlyrRed;  #plyrTxtIntrvl;
 
-  //
-  #wagerFormat;  #bettingStructure;  #royaltyStructure;
-  #minBet;  #pot;  #currBet;  #minRaise;
-  #cardFormat;
-  // //
-
-  #shwChps;  #plyrTxtIntrvl;
   constructor(pc = 9, cc = 10000, wf = 'bets', mnbt = 2, cf = 'poker') {
-    this.#plyrCnt = pc;  this.#plyrArr = [];  this.#plyrTurn = 0;  this.#chpCnt = cc;
-
-    //
-  	this.#wagerFormat = wf;  this.#bettingStructure = null;  this.#royaltyStructure = null;
-    this.#minBet = mnbt;  this.#pot = 0;  this.#currBet = 0;  this.#minRaise = this.#minBet;
-    this.#cardFormat = cf;
-    // //
-
-    this.#shwChps = false;
+    this.#plyrCnt = pc;  this.#plyrArr = [];
+    for (let i = 0; i < this.#plyrCnt; i++) {this.#plyrArr[i] = new Seat(this, 0, 0, 1.5, cc);}
+    this.#plyrBttn = 0;
+  	this.#raker = new Raker(this.#plyrArr, wf, mnbt);
+    this.#dealer = new Dealer(cf);
+    this.#plyrsInHnd = [];  this.#plyrTurn = this.#plyrBttn + 1;
+    this.refillPlyrsInHnd();
+    this.#actPlyrRed = false;
     this.#wp = crtElem(cnvsTrgt, 'div', {props: [{prop: 'className', val: 'cnvsWrap'}]});
     this.#wp.style.position = 'static';
     this.#cnvs = crtElem(this.#wp, 'canvas', {props: [{prop: 'className', val: 'cnvs'}]});
@@ -27,9 +20,9 @@ class Table {
     this.#tblBar = new MenuBar(this, this.#wp);
     this.#mnBar = new MenuBar(this, cnvsMenu);
     this.#plyrTxtIntrvl = setInterval(() => {
-  		this.#shwChps = !this.#shwChps;
-  		this.drawPlayers(this, this.#plyrArr, 'red', 'white', this.#shwChps);
-  	}, 2000);
+  		this.#actPlyrRed = !this.#actPlyrRed;
+  		this.drawPlayers();
+  	}, 500);
     vsblTbls++;
     window.addEventListener('resize', () => {this.resizeCanvas();});
   	newTblBttn.addEventListener('click', () => {this.resizeCanvas();});
@@ -46,19 +39,42 @@ class Table {
   get cvh() {return this.#cnvs.height/2;}
   get bw() {return Math.min(this.#cnvs.width/2, this.#cnvs.height/2)/9;}
 
-  // Players Turn
-  clearAllTurns() {for (let pa of this.#plyrArr) {pa.notTurn();}}
-  clearTurn() {this.#plyrArr[this.#plyrTurn].notTurn();}
-  nextTurn() {this.#plyrTurn++;}
-  jumpToTurn(trn) {this.#plyrTurn = trn;}
-  setTurn() {this.#plyrArr[this.#plyrTurn].isTurn();}
 
+  // Work on
+  // Move Players Turn and Button
+  refillPlyrsInHnd() {
+    this.#plyrsInHnd = [];
+    for (let i = 0; i < this.#plyrArr.length; i++) {this.#plyrsInHnd[i] = this.#plyrArr[i];}
+  }
+  clearAllTurns() {for (let pa of this.#plyrArr) {pa.notTurn();}}
+  clearTurn() {this.#plyrsInHnd[this.#plyrTurn].notTurn();}
+  nextTurn() {
+    this.#plyrTurn++;
+    if (this.#plyrTurn >= this.#plyrsInHnd.length) {this.#plyrTurn = 0;}
+  }
+  jumpToTurn(trn) {if (trn >= 0 && trn < this.#plyrsInHnd.length) {this.#plyrTurn = trn;}}
+  setTurn() {this.#plyrsInHnd[this.#plyrTurn].isTurn();}
   nextPlayer() {
     this.clearTurn();
     this.nextTurn();
     this.setTurn();
   }
-  // // Players Turn
+  nextRound() {
+    this.clearTurn();
+    this.jumpToTurn(this.#plyrBttn + 1);
+    this.setTurn();
+    this.#raker.rakeSubPots();
+  }
+  nextHand() {
+
+  }
+  nextBttn() {
+    this.#plyrBttn++;
+    if (this.#plyrBttn >= this.#plyrArr.length) {this.#plyrBttn = 0;}
+  }
+  jumpToBttn(bttn) {if (bttn >= 0 && bttn < this.#plyrArr.length) {this.#plyrBttn = bttn;}}
+  // // Work On
+
 
   // Tables Main Focal Point Function
   resizeCanvas() {
@@ -66,11 +82,11 @@ class Table {
       if (this.#wp.style.position === 'static' && vsblTbls > 0) {this.fitCanvas(Math.ceil(Math.sqrt(vsblTbls)));}
       else if (this.#wp.style.position === 'absolute' && vsblTbls > 0) {this.fitCanvas(1);}
       let plyrPosArr = this.calcPlayerPos();
-    	for (let i = 0; i < this.#plyrCnt; i++) {
-    		if (!this.#plyrArr[i]) {this.#plyrArr[i] = new Player(this, 0, 0, this.#chpCnt);}
+    	for (let i = 0; i < this.#plyrArr.length; i++) {if (plyrPosArr[i]) {
     		this.#plyrArr[i].x = plyrPosArr[i].x;
     		this.#plyrArr[i].y = plyrPosArr[i].y;
-    	}
+        this.#plyrArr[i].ang = plyrPosArr[i].ang;
+    	}}
     	this.drawScene();
     }
   }
@@ -104,38 +120,39 @@ class Table {
   	return this.alignPlayersPos(playerPosArr);
   }
   alignPlayersPos(pa) {
-  	const avgDist = this.findTotPlyrDist(pa) / pa.length, cirSlc = Math.PI*2/pa.length;
+  	const avgDist = this.findTotPlyrDist(pa) / this.#plyrCnt, cirSlc = Math.PI*2/this.#plyrCnt;
   	let {palr, pall} = this.setTopAnchors(pa, avgDist, cirSlc);
   	this.alignAllPlayers(pa, avgDist, cirSlc, palr, pall);
   	return pa;
   }
   findTotPlyrDist(pa) {
   	let totDist = 0;
-  	for (let i = 0; i < pa.length; i++) {
+  	for (let i = 0; i < this.#plyrCnt; i++) {
   		let j = i + 1;
-  		if (j === pa.length) {j = 0;}
+  		if (j === this.#plyrCnt) {j = 0;}
   		totDist += Math.sqrt((pa[i].x - pa[j].x)**2 + (pa[i].y - pa[j].y)**2);
   	}
   	return totDist;
   }
   setTopAnchors(pa, avgDist, cirSlc) {
   	let palr, pall;
-  	if (pa.length % 2 === 0) {palr = pall = pa.length/2;}
+    pa[0].ang = 0;
+  	if (this.#plyrCnt % 2 === 0) {palr = pall = this.#plyrCnt/2;}
   	else {
-  		palr = Math.floor(pa.length/2), pall = Math.ceil(pa.length/2);
+  		palr = Math.floor(this.#plyrCnt/2), pall = Math.ceil(this.#plyrCnt/2);
   		const baseMid = {x: this.cvw, y: this.bw};
-  		[pa[palr].x, pa[palr].y] = this.alignPlayer(baseMid, pa[palr], avgDist/2, cirSlc*palr, -1);
-  		[pa[pall].x, pa[pall].y] = this.alignPlayer(baseMid, pa[pall], avgDist/2, cirSlc*pall, 1);
+  		[pa[palr].x, pa[palr].y, pa[palr].ang] = this.alignPlayer(baseMid, pa[palr], avgDist/2, cirSlc*palr, -1);
+  		[pa[pall].x, pa[pall].y, pa[pall].ang] = this.alignPlayer(baseMid, pa[pall], avgDist/2, cirSlc*pall, 1);
   	}
   	return {palr, pall};
   }
   alignAllPlayers(pa, avgDist, cirSlc, palr, pall) {
-    const strctr = [{a: 0, b: 1, c: 0, d: 1/2, e: 1}, {a: 0, b: pa.length-1, c: 3/2, d: 2, e: -1},
+    const strctr = [{a: 0, b: 1, c: 0, d: 1/2, e: 1}, {a: 0, b: this.#plyrCnt-1, c: 3/2, d: 2, e: -1},
                     {a: palr, b: palr-1, c: 1/2, d: 1, e: -1}, {a: pall, b: pall+1, c: 1, d: 3/2, e: 1}];
     for (const {a,b,c,d,e} of strctr) {
       for (let i = a, j = b; cirSlc*j > Math.PI*c && cirSlc*j < Math.PI*d; i+=e, j+=e) {
-    		if (i < 0) {i = pa.length-1;}
-    		[pa[j].x, pa[j].y] = this.alignPlayer(pa[i], pa[j], avgDist, cirSlc*j, e);
+    		if (i < 0) {i = this.#plyrCnt-1;}
+    		[pa[j].x, pa[j].y, pa[j].ang] = this.alignPlayer(pa[i], pa[j], avgDist, cirSlc*j, e);
     	}
     }
   }
@@ -150,12 +167,12 @@ class Table {
   		currAng += Math.PI/360*mult;
   		({thisDist, xPos, yPos} = this.linSearch(currAng, pi));
   	}}
-  	return [xPos, yPos];
+  	return [xPos, yPos, currAng];
   }
   linSearch(currAng, pa) {
-  	let xPos = this.cvw - Math.sin(currAng) * (this.cvw - this.bw);
-  	let yPos = this.cvh + Math.cos(currAng) * (this.cvh - this.bw);
-  	let thisDist = Math.sqrt((pa.x - xPos)**2 + (pa.y - yPos)**2);
+  	const xPos = this.cvw - Math.sin(currAng) * (this.cvw - this.bw);
+  	const yPos = this.cvh + Math.cos(currAng) * (this.cvh - this.bw);
+  	const thisDist = Math.sqrt((pa.x - xPos)**2 + (pa.y - yPos)**2);
   	return {thisDist, xPos, yPos};
   }
   // Draw Table to Canvas
@@ -163,6 +180,7 @@ class Table {
   	this.drawBackground();
   	this.drawTable();
   	this.drawPlayers();
+    this.drawButton();
   }
   drawBackground() {
   	this.#cnvs2d.fillStyle = 'black';
@@ -179,10 +197,20 @@ class Table {
   drawPlayers() {
   	for (let i = 0; i < this.#plyrArr.length; i++) {
       const pai = this.#plyrArr[i];
-  		drawEllipse(this.#cnvs2d, pai.x, pai.y, this.bw, this.bw, 'red');
+      if (this.#actPlyrRed && pai.myTurn) {
+        drawEllipse(this.#cnvs2d, pai.x, pai.y, this.bw, this.bw, 'red');
+        drawText(this.#cnvs2d, pai.x, pai.y, 'cyan', this.bw, i, i+1);
+      }
+  		else {
+        drawEllipse(this.#cnvs2d, pai.x, pai.y, this.bw, this.bw, 'blue');
+        drawText(this.#cnvs2d, pai.x, pai.y, 'yellow', this.bw, i, i+1);
+      }
   		drawEllipse(this.#cnvs2d, pai.x, pai.y, this.bw*11/12, this.bw*11/12, 'white', 'stroke', this.bw/6);
-      if (!this.#shwChps) {drawText(this.#cnvs2d, pai.x, pai.y, 'cyan', this.bw, i, i+1);}
-      else {drawText(this.#cnvs2d, pai.x, pai.y, 'cyan', this.bw*3/5, i, pai.chips);}
   	}
+  }
+  drawButton() {
+    const xPos = this.cvw - Math.sin(this.#plyrArr[this.#plyrBttn].ang) * (this.cvw*2/3);
+  	const yPos = this.cvh + Math.cos(this.#plyrArr[this.#plyrBttn].ang) * (this.cvh*2/3);
+    drawEllipse(this.#cnvs2d, xPos, yPos, this.bw, this.bw, 'white');
   }
 }
