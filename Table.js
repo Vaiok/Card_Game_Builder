@@ -1,7 +1,7 @@
 class Table {
   #wp;  #tblBar;  #mnBar;  #cnvs;  #cnvs2d;  #raker;  #dealer;
   #plyrCnt;  #plyrArr;
-  #plyrsInHnd;  #plyrTurn;  #plyrBttn;
+  #plyrTurn;  #plyrBttn;
   #actPlyrRed;  #plyrTxtIntrvl;
 
   constructor(pc = 9, cc = 10000, wf = 'bets', mnbt = 2, cf = 'poker') {
@@ -10,7 +10,7 @@ class Table {
     this.#plyrBttn = 0;
   	this.#raker = new Raker(this.#plyrArr, wf, mnbt);
     this.#dealer = new Dealer(cf);
-    this.#plyrsInHnd = [];  this.#plyrTurn = this.#plyrBttn + 1;
+    this.#plyrTurn = this.#plyrBttn + 1;
     this.refillPlyrsInHnd();
     this.#actPlyrRed = false;
     this.#wp = crtElem(cnvsTrgt, 'div', {props: [{prop: 'className', val: 'cnvsWrap'}]});
@@ -42,18 +42,20 @@ class Table {
 
   // Work on
   // Move Players Turn and Button
-  refillPlyrsInHnd() {
-    this.#plyrsInHnd = [];
-    for (let i = 0; i < this.#plyrArr.length; i++) {this.#plyrsInHnd[i] = this.#plyrArr[i];}
-  }
+  refillPlyrsInHnd() {for (let pa of this.#plyrArr) {pa.isInHand();}}
   clearAllTurns() {for (let pa of this.#plyrArr) {pa.notTurn();}}
-  clearTurn() {this.#plyrsInHnd[this.#plyrTurn].notTurn();}
+  clearTurn() {this.#plyrArr[this.#plyrTurn].notTurn();}
   nextTurn() {
-    this.#plyrTurn++;
-    if (this.#plyrTurn >= this.#plyrsInHnd.length) {this.#plyrTurn = 0;}
+    do {
+      this.#plyrTurn++;
+      if (this.#plyrTurn >= this.#plyrArr.length) {this.#plyrTurn = 0;}
+    } while (!this.#plyrArr[this.#plyrTurn].inHand);
   }
-  jumpToTurn(trn) {if (trn >= 0 && trn < this.#plyrsInHnd.length) {this.#plyrTurn = trn;}}
-  setTurn() {this.#plyrsInHnd[this.#plyrTurn].isTurn();}
+  jumpToTurn(trn) {
+    if (trn >= 0 && trn < this.#plyrArr.length && this.#plyrArr[this.#plyrTurn].inHand) {this.#plyrTurn = trn;}
+  }
+  setTurn() {this.#plyrArr[this.#plyrTurn].isTurn();}
+
   nextPlayer() {
     this.clearTurn();
     this.nextTurn();
@@ -71,8 +73,14 @@ class Table {
   nextBttn() {
     this.#plyrBttn++;
     if (this.#plyrBttn >= this.#plyrArr.length) {this.#plyrBttn = 0;}
+    this.drawScene();
   }
-  jumpToBttn(bttn) {if (bttn >= 0 && bttn < this.#plyrArr.length) {this.#plyrBttn = bttn;}}
+  jumpToBttn(bttn) {
+    if (bttn >= 0 && bttn < this.#plyrArr.length) {
+      this.#plyrBttn = bttn;
+      this.drawScene();
+    }
+  }
   // // Work On
 
 

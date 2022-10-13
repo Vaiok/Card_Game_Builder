@@ -1,5 +1,6 @@
 class Seat {
-  #tble;  #xPos;  #yPos;  #angPos;  #myTurn;
+  #tble;  #xPos;  #yPos;  #angPos;
+  #inHand;  #myTurn;
   #chipCnt;  #callSize;  #betSize;  #subPot;
 
   constructor(tbl, xp = 0, yp = 0, ap = 0, cc = 10000) {
@@ -7,6 +8,7 @@ class Seat {
     this.#xPos = xp;
     this.#yPos = yp;
     this.#angPos = ap;
+    this.#inHand = true;
     this.#myTurn = false;
     this.#chipCnt = cc;
     this.#callSize = 0;
@@ -36,8 +38,8 @@ class Seat {
   isInHand() {this.#inHand = true;}
 
   fold() {
+    this.notInHand();
     this.#tble.nextPlayer();
-
   }
   check() {this.#tble.nextPlayer();}
   call() {
