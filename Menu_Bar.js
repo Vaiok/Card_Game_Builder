@@ -14,7 +14,7 @@ class MenuBar {
         a: [tble, '#ff0', '#00f', 'static', (a)=>{return !a;}, 'none', -1]},
       {s: sf.#clsMn, p: sf.wp, t: 'button', c: 'menuClose', f: sf.sizeClose, a: [tble]}];
     for (let {s, p, t, c=undefined, x=null, f=undefined, a=undefined} of elemObj) {
-      s = crtElem(p, t, {cont:x, props:[{prop:'className', val:c}], evnts:[{type:'click', func:f, argLst: a}]});
+      s = crtElem(p, t, {cont:x, props:[{prop:'className', val:c}], evnts:[{type:'click', func:f, argLst:a}]});
     }
   }
   // Accessors

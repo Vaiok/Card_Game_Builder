@@ -1,6 +1,6 @@
 class Seat {
   #tble;  #xPos;  #yPos;  #angPos;
-  #inHand;  #myTurn;
+  #mySeat;  #inHand;  #myTurn;
   #chipCnt;  #callSize;  #betSize;  #subPot;
 
   constructor(tbl, xp = 0, yp = 0, ap = 0, cc = 10000) {
@@ -8,11 +8,12 @@ class Seat {
     this.#xPos = xp;
     this.#yPos = yp;
     this.#angPos = ap;
+    this.#mySeat = true;
     this.#inHand = true;
     this.#myTurn = false;
     this.#chipCnt = cc;
-    this.#callSize = 0;
-    this.#betSize = 0;
+    this.#callSize = 10;
+    this.#betSize = 10;
     this.#subPot = 0;
   }
 
@@ -46,16 +47,35 @@ class Seat {
     this.#chipCnt -= this.#callSize;
     this.#subPot += this.#callSize;
     this.#tble.nextPlayer();
+    this.#tble.drawScene();
   }
   bet() {
     this.#chipCnt -= this.#betSize;
     this.#subPot += this.#betSize;
     this.#tble.nextPlayer();
+    this.#tble.drawScene();
   }
   raise() {
     this.#chipCnt -= this.#callSize + this.#betSize;
     this.#subPot += this.#callSize + this.#betSize;
     this.#tble.nextPlayer();
+    this.#tble.drawScene();
   }
   // // Work On
+
+  drawPlayer(cv2d, plyrRed) {
+    if (plyrRed && this.#myTurn) {
+      drawEllipse(cv2d, this.x, this.y, this.#tble.bw, this.#tble.bw, 'red');
+      drawText(cv2d, this.x, this.y, 'cyan', this.#tble.bw*2/3, this.chips);
+    }
+    else {
+      drawEllipse(cv2d, this.x, this.y, this.#tble.bw, this.#tble.bw, 'blue');
+      drawText(cv2d, this.x, this.y, 'yellow', this.#tble.bw*2/3, this.chips);
+    }
+    drawEllipse(cv2d, this.x, this.y, this.#tble.bw*11/12, this.#tble.bw*11/12, 'white', 'stroke', this.#tble.bw/6);
+    const xPos = this.#tble.cvw - Math.sin(this.ang) * (this.#tble.cvw/2);
+    const yPos = this.#tble.cvh + Math.cos(this.ang) * (this.#tble.cvh/2);
+    drawText(cv2d, xPos, yPos, 'magenta', this.#tble.bw*2/3, this.subPot);
+  }
+
 }

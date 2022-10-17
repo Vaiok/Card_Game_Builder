@@ -1,7 +1,9 @@
 class Dealer {
+  #tble;
   #cardFormat;
 
-  constructor(cf) {
+  constructor(tbl,cf) {
+    this.#tble = tbl;
     this.#cardFormat = cf;
   }
 }

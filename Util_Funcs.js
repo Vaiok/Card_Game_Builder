@@ -30,7 +30,7 @@ function drawEllipse(cnvs2d, x, y, radX, radY, color, type = 'fill', lnWid = 1, 
 	cnvs2d.ellipse(x, y, radX, radY, 0, 0, Math.PI*2);
 	cnvs2d[type]();
 }
-function drawText(cnvs2d, x, y, color, fntSz, i, cntnt) {
+function drawText(cnvs2d, x, y, color, fntSz, cntnt) {
 	cnvs2d.fillStyle = color;
 	cnvs2d.textAlign = 'center';
 	cnvs2d.textBaseline = 'middle';
