@@ -51,20 +51,6 @@ body, p {margin: 0;}
   font-size: 3vh;
 }
 
-/* **New** */
-.foldBtn {
-  grid-area: 18 / 6 / 20 / 8;
-}
-.checkBtn {
-  grid-area: 18 / 9 / 20 / 11;
-}
-.callBtn {
-  grid-area: 18 / 12 / 20 / 14;
-}
-.betBtn {
-  grid-area: 18 / 15 / 20 / 17;
-}
-.raiseBtn {
-  grid-area: 18 / 18 / 20 / 20;
-}
-/* **New** */
+.foldBtn {grid-area: 19 / 13 / 21 / 15;}
+.checkBtn, .callBtn {grid-area: 19 / 16 / 21 / 18;}
+.betBtn, .raiseBtn {grid-area: 19 / 19 / 21 / 21;}

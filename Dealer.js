@@ -1,9 +1,7 @@
-class Dealer {
-  #tble;
+class Dealer extends Raker {
   #cardFormat;
-
-  constructor(tbl,cf) {
-    this.#tble = tbl;
+  constructor(pc, cc, wf, mnbt, cf) {
+    super(pc, cc, wf, mnbt);
     this.#cardFormat = cf;
   }
 }

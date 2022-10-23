@@ -8,8 +8,8 @@ async function runServer() {
 }
 async function loadFiles() {
   const fileObj = {html: [{str: 'index.html'}], css: [{str: 'Layout.css'}],
-    js: [{str: 'Main.js'},{str: 'Seat.js'},{str: 'Raker.js'},{str: 'Dealer.js'},
-      {str: 'Menu_Bar.js'},{str: 'Table.js'},{str: 'Util_Funcs.js'}]};
+    js: [{str: 'Util_Funcs.js'},{str: 'Seat.js'},{str: 'Menu_Bar.js'},{str: 'Table.js'},
+      {str: 'Raker.js'},{str: 'Dealer.js'},{str: 'Render.js'},{str: 'Game.js'},{str: 'Main.js'}]};
   try {for (let tp of [fileObj.html, fileObj.css, fileObj.js]) {await loadFileType(tp);}}
   catch (err) {console.error(`${err}`);}
   return fileObj;

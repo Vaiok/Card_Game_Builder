@@ -1,25 +1,25 @@
 class MenuBar {
-  #prnt;  #wrap;  #mnbrP;  #fllMn;  #grdMn;  #hdMn;  #clsMn;
+  #prnt;  #wrap;  #mnbrP;  #menuBttns;
   constructor(tble, pe) {
-    const sf = this;
-    sf.#prnt = pe;
-    sf.#wrap = crtElem(sf.#prnt, 'div', {props: [{prop: 'className', val: 'menuWrap'}]});
-    sf.#mnbrP = crtElem(sf.wp, 'p',{cont: String(tbleArr.length+1), props: [{prop: 'className', val: 'mnbrP'}]});
+    this.#prnt = pe;
+    this.#wrap = crtElem(this.#prnt, 'div', {props: [{prop: 'className', val: 'menuWrap'}]});
+    this.#mnbrP = crtElem(this.wp, 'p',{cont: String(tbleArr.length+1), props: [{prop: 'className', val: 'mnbrP'}]});
+    this.#menuBttns = {};
     const elemObj =
-      [{s: sf.#fllMn, p: sf.wp, t: 'button', c: 'menuFull', f: sf.sizeTble,
+      [{s: this.#menuBttns.full, p: this.wp, t: 'button', c: 'menuFull', f: this.sizeTble,
         a: [tble, '#0f0', '#f0f', 'absolute', (a)=>{return a;}, 'grid', 1]},
-      {s: sf.#grdMn, p: sf.wp, t: 'button', c: 'menuGrid', f: sf.sizeTble,
+      {s: this.#menuBttns.grid, p: this.wp, t: 'button', c: 'menuGrid', f: this.sizeTble,
         a: [tble, '#00f', '#ff0', 'static', (a)=>{return a;}, 'grid', 1]},
-      {s: sf.#hdMn, p: sf.wp, t: 'button', c: 'menuHide', f: sf.sizeTble,
+      {s: this.#menuBttns.hide, p: this.wp, t: 'button', c: 'menuHide', f: this.sizeTble,
         a: [tble, '#ff0', '#00f', 'static', (a)=>{return !a;}, 'none', -1]},
-      {s: sf.#clsMn, p: sf.wp, t: 'button', c: 'menuClose', f: sf.sizeClose, a: [tble]}];
+      {s: this.#menuBttns.close, p: this.wp, t: 'button', c: 'menuClose', f: this.sizeClose, a: [tble]}];
     for (let {s, p, t, c=undefined, x=null, f=undefined, a=undefined} of elemObj) {
       s = crtElem(p, t, {cont:x, props:[{prop:'className', val:c}], evnts:[{type:'click', func:f, argLst:a}]});
     }
   }
   // Accessors
   get wp() {return this.#wrap;}
-
+  // Button Functions
   sizeTble([tble, bgc, clr, pos, tdp, sdp, inc]) {
     tble.mb.wp.style.backgroundColor = bgc;
     tble.mb.wp.style.color = clr;
@@ -28,7 +28,7 @@ class MenuBar {
       tble.wp.style.display = sdp;
       vsblTbls += inc;
     }
-    for (let tbl of tbleArr) {tbl.resizeCanvas();}
+    for (let tbl of tbleArr) {tbl.resizeAndDrawCanvas();}
   }
   sizeClose([tble]) {
     tble.wp.style.position = 'static';
@@ -39,6 +39,6 @@ class MenuBar {
       tbleArr.splice(tbl, 1);
       break;
     }}
-    for (let tbl of tbleArr) {tbl.resizeCanvas();}
+    for (let tbl of tbleArr) {tbl.resizeAndDrawCanvas();}
   }
 }

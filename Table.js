@@ -1,146 +1,42 @@
 class Table {
-  #wp;  #tblBar;  #mnBar;  #cnvs;  #cnvs2d;  #raker;  #dealer;
-  #plyrCnt;  #plyrArr;
-  #plyrTurn;  #plyrBttn;
-  #actPlyrRed;  #plyrTxtIntrvl;
-
-  // New
-  #foldBtn;  #checkBtn;  #callBtn;  #betBtn;  #raiseBtn;
-  // // New
-
-  constructor(pc = 9, cc = 10000, wf = 'bets', mnbt = 2, cf = 'poker') {
-
+  #wp;  #cnvs;
+  #plyrCnt;  #plyrArr;  #actPlyr;
+  constructor(pc = 9, cc = 10000) {
     this.#wp = crtElem(cnvsTrgt, 'div', {props: [{prop: 'className', val: 'cnvsWrap'}]});
     this.#wp.style.position = 'static';
     this.#cnvs = crtElem(this.#wp, 'canvas', {props: [{prop: 'className', val: 'cnvs'}]});
-    this.#cnvs2d = this.#cnvs.getContext('2d');
-    this.#tblBar = new MenuBar(this, this.#wp);
-    this.#mnBar = new MenuBar(this, cnvsMenu);
-
     this.#plyrCnt = pc;  this.#plyrArr = [];
     for (let i = 0; i < this.#plyrCnt; i++) {this.#plyrArr[i] = new Seat(this, 0, 0, 1.5, cc);}
-    this.#plyrBttn = 0;
-  	this.#raker = new Raker(this, wf, mnbt);
-    this.#dealer = new Dealer(this, cf);
-    this.#plyrTurn = this.#plyrBttn + 1;
-    this.refillPlyrsInHnd();
-    this.#actPlyrRed = false;
-
-    this.#plyrTxtIntrvl = setInterval(() => {
-  		this.#actPlyrRed = !this.#actPlyrRed;
-  		this.drawPlayers();
-  	}, 500);
-    vsblTbls++;
-    window.addEventListener('resize', () => {this.resizeCanvas();});
-  	newTblBttn.addEventListener('click', () => {this.resizeCanvas();});
-    requestAnimationFrame(() => {
-      this.resizeCanvas();
-      this.setTurn();
-    });
-
-    // New
-    this.#foldBtn = document.createElement('button');
-    this.#wp.appendChild(this.#foldBtn);
-    this.#foldBtn.appendChild(document.createTextNode('Fold'));
-    this.#foldBtn.className = 'foldBtn';
-    this.#foldBtn.addEventListener('click', () => {this.#plyrArr[this.#plyrTurn].fold();});
-    this.#checkBtn = document.createElement('button');
-    this.#wp.appendChild(this.#checkBtn);
-    this.#checkBtn.appendChild(document.createTextNode('Check'));
-    this.#checkBtn.className = 'checkBtn';
-    this.#checkBtn.addEventListener('click', () => {this.#plyrArr[this.#plyrTurn].check();});
-    this.#callBtn = document.createElement('button');
-    this.#wp.appendChild(this.#callBtn);
-    this.#callBtn.appendChild(document.createTextNode('Call'));
-    this.#callBtn.className = 'callBtn';
-    this.#callBtn.addEventListener('click', () => {this.#plyrArr[this.#plyrTurn].call();});
-    this.#betBtn = document.createElement('button');
-    this.#wp.appendChild(this.#betBtn);
-    this.#betBtn.appendChild(document.createTextNode('Bet'));
-    this.#betBtn.className = 'betBtn';
-    this.#betBtn.addEventListener('click', () => {this.#plyrArr[this.#plyrTurn].bet();});
-    this.#raiseBtn = document.createElement('button');
-    this.#wp.appendChild(this.#raiseBtn);
-    this.#raiseBtn.appendChild(document.createTextNode('Raise'));
-    this.#raiseBtn.className = 'raiseBtn';
-    this.#raiseBtn.addEventListener('click', () => {this.#plyrArr[this.#plyrTurn].raise();});
-    // // New
-
+    // Temp Until Occupying a Seat is Implemented
+    this.#actPlyr = this.#plyrArr[0];
+    // // Temp Until Occupying a Seat is Implemented
   }
   // Accessors
-  get mb() {return this.#mnBar;}
   get wp() {return this.#wp;}
+  get cnvs() {return this.#cnvs;}
+  get pa() {return this.#plyrArr;}
+  get ap() {return this.#actPlyr;}
   // Common Value Shortcuts
   get cvw() {return this.#cnvs.width/2;}
   get cvh() {return this.#cnvs.height/2;}
   get bw() {return Math.min(this.#cnvs.width/2, this.#cnvs.height/2)/9;}
-
-
-
-
-  // Work on
-  // Move Players Turn and Button
-  nextHand() {
-    this.refillPlyrsInHnd();
-    this.nextBttn();
-    this.nextRound();
-  }
-  refillPlyrsInHnd() {for (let pa of this.#plyrArr) {pa.isInHand();}}
-  nextBttn() {
-    this.#plyrBttn++;
-    if (this.#plyrBttn >= this.#plyrArr.length) {this.#plyrBttn = 0;}
-    this.drawScene();
-  }
-  jumpToBttn(bttn) {
-    if (bttn >= 0 && bttn < this.#plyrArr.length) {
-      this.#plyrBttn = bttn;
-      this.drawScene();
-    }
-  }
-  nextRound() {
-    this.clearTurn();
-    this.jumpToTurn(this.#plyrBttn + 1);
-    this.setTurn();
-    this.#raker.rakeSubPots(this.#plyrArr);
-  }
-  nextPlayer() {
-    this.clearTurn();
-    this.nextTurn();
-    this.setTurn();
-  }
-  clearAllTurns() {for (let pa of this.#plyrArr) {pa.notTurn();}}
-  clearTurn() {this.#plyrArr[this.#plyrTurn].notTurn();}
-  nextTurn() {
-    do {
-      this.#plyrTurn++;
-      if (this.#plyrTurn >= this.#plyrArr.length) {this.#plyrTurn = 0;}
-    } while (!this.#plyrArr[this.#plyrTurn].inHand);
-  }
-  jumpToTurn(trn) {
-    if (trn >= 0 && trn < this.#plyrArr.length && this.#plyrArr[this.#plyrTurn].inHand) {this.#plyrTurn = trn;}
-  }
-  setTurn() {this.#plyrArr[this.#plyrTurn].isTurn();}
-  // // Work On
-
-
-
-
   // Tables Main Focal Point Function
-  resizeCanvas() {
+  resizeCanvas(tb) {
     if (this.#wp.style.display !== 'none') {
-      if (this.#wp.style.position === 'static' && vsblTbls > 0) {this.fitCanvas(Math.ceil(Math.sqrt(vsblTbls)));}
-      else if (this.#wp.style.position === 'absolute' && vsblTbls > 0) {this.fitCanvas(1);}
+      if (this.#wp.style.position === 'static' && vsblTbls > 0) {
+        this.fitCanvas(Math.ceil(Math.sqrt(vsblTbls)), tb);
+      }
+      else if (this.#wp.style.position === 'absolute' && vsblTbls > 0) {this.fitCanvas(1, tb);}
       let plyrPosArr = this.calcPlayerPos();
     	for (let i = 0; i < this.#plyrArr.length; i++) {if (plyrPosArr[i]) {
     		this.#plyrArr[i].x = plyrPosArr[i].x;
     		this.#plyrArr[i].y = plyrPosArr[i].y;
         this.#plyrArr[i].ang = plyrPosArr[i].ang;
     	}}
-    	this.drawScene();
     }
   }
   // Setup Canvas Size
-  fitCanvas(tempVal) {
+  fitCanvas(tempVal, tb) {
     let tmpVl = tempVal;
     if (tempVal**2 >= vsblTbls + tempVal) {tmpVl = tempVal-1;}
     const bpl = Math.floor(window.innerWidth * 4/window.innerHeight);
@@ -149,8 +45,7 @@ class Table {
     if (mnwc/tmpVl*window.innerHeight*4/5 > 100/tempVal*window.innerWidth) {this.fitToGrid(tmpVl, tempVal, mnwc);}
     this.#cnvs.width = this.#cnvs.clientWidth;
   	this.#cnvs.height = this.#cnvs.clientHeight;
-
-    this.#tblBar.wp.style.fontSize = this.#cnvs.height/20 + 'px';
+    tb.wp.style.fontSize = this.#cnvs.height/20 + 'px';
   }
   fitToGrid(wd, ht, mnwc) {
     this.#wp.style.width = `calc(${100/wd}vw - ${wd-1}px)`;
@@ -223,32 +118,5 @@ class Table {
   	const yPos = this.cvh + Math.cos(currAng) * (this.cvh - this.bw);
   	const thisDist = Math.sqrt((pa.x - xPos)**2 + (pa.y - yPos)**2);
   	return {thisDist, xPos, yPos};
-  }
-  // Draw Table to Canvas
-  drawScene() {
-  	this.drawBackground();
-  	this.drawTable();
-  	this.drawPlayers();
-    this.drawButton();
-  }
-  drawBackground() {
-  	this.#cnvs2d.fillStyle = 'black';
-  	this.#cnvs2d.fillRect(0, 0, this.cvw*2, this.cvh*2);
-  }
-  drawTable() {
-  	let shdw = {color: '#000f', blur: this.bw/2, x: 0, y: this.bw};
-  	drawEllipse(this.#cnvs2d, this.cvw, this.cvh, this.cvw, this.cvh, 'limegreen');
-    this.#raker.drawPot(this.#cnvs2d);
-  	drawEllipse(this.#cnvs2d, this.cvw, this.cvh, this.cvw - this.bw, this.cvh - this.bw,
-  							'#a0522d', 'stroke', this.bw*2);
-  	drawEllipse(this.#cnvs2d, this.cvw, this.cvh, this.cvw - this.bw, this.cvh - this.bw,
-  							'#a0522d6f', 'stroke', this.bw*2, shdw);
-  }
-  drawPlayers() {for (let playr of this.#plyrArr) {playr.drawPlayer(this.#cnvs2d, this.#actPlyrRed);}}
-  drawButton() {
-    const xPos = this.cvw - Math.sin(this.#plyrArr[this.#plyrBttn].ang) * (this.cvw*2/3);
-  	const yPos = this.cvh + Math.cos(this.#plyrArr[this.#plyrBttn].ang) * (this.cvh*2/3);
-    drawEllipse(this.#cnvs2d, xPos, yPos, this.bw*2/3, this.bw*2/3, 'white');
-    drawText(this.#cnvs2d, xPos, yPos, 'black', this.bw, 'B');
   }
 }

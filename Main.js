@@ -4,4 +4,4 @@ let vsblTbls = 0;
 const cnvsMenu = document.querySelector('#cnvsMenu');
 const cnvsTrgt = document.querySelector('#cnvsTrgt');
 const newTblBttn = document.querySelector('#mkTblBttn');
-newTblBttn.addEventListener('click', () => {tbleArr.push(new Table());});
+newTblBttn.addEventListener('click', () => {tbleArr.push(new Game());});
