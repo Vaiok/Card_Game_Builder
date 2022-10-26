@@ -24,20 +24,26 @@ class Render extends Dealer {
   	drawEllipse(this.#cnvs2d, this.cvw, this.cvh, this.cvw - this.bw, this.cvh - this.bw,
   							'#a0522d6f', 'stroke', this.bw*2, shdw);
   }
-  drawPlayers(apr) {for (let plyr of this.pa) {
-    if (apr && plyr.myTurn) {
-      drawEllipse(this.#cnvs2d, plyr.x, plyr.y, this.bw, this.bw, 'red');
-      drawText(this.#cnvs2d, plyr.x, plyr.y, 'cyan', this.bw*2/3, plyr.chips);
+  drawPlayers(apr) {
+    for (let plyr of this.pa) {
+      if (apr && plyr.myTurn) {
+        drawEllipse(this.#cnvs2d, plyr.x, plyr.y, this.bw, this.bw, 'red');
+        drawText(this.#cnvs2d, plyr.x, plyr.y, 'cyan', this.bw*2/3, plyr.chips);
+      }
+      else if (plyr.inHand) {
+        drawEllipse(this.#cnvs2d, plyr.x, plyr.y, this.bw, this.bw, 'blue');
+        drawText(this.#cnvs2d, plyr.x, plyr.y, 'yellow', this.bw*2/3, plyr.chips);
+      }
+      else {
+        drawEllipse(this.#cnvs2d, plyr.x, plyr.y, this.bw, this.bw, 'limegreen');
+        drawText(this.#cnvs2d, plyr.x, plyr.y, 'magenta', this.bw*2/3, plyr.chips);
+      }
+      drawEllipse(this.#cnvs2d, plyr.x, plyr.y, this.bw*11/12, this.bw*11/12, 'white', 'stroke', this.bw/6);
+      const xPos = this.cvw - Math.sin(plyr.ang) * (this.cvw/2);
+      const yPos = this.cvh + Math.cos(plyr.ang) * (this.cvh/2);
+      drawText(this.#cnvs2d, xPos, yPos, 'magenta', this.bw*2/3, plyr.subPot);
     }
-    else {
-      drawEllipse(this.#cnvs2d, plyr.x, plyr.y, this.bw, this.bw, 'blue');
-      drawText(this.#cnvs2d, plyr.x, plyr.y, 'yellow', this.bw*2/3, plyr.chips);
-    }
-    drawEllipse(this.#cnvs2d, plyr.x, plyr.y, this.bw*11/12, this.bw*11/12, 'white', 'stroke', this.bw/6);
-    const xPos = this.cvw - Math.sin(plyr.ang) * (this.cvw/2);
-    const yPos = this.cvh + Math.cos(plyr.ang) * (this.cvh/2);
-    drawText(this.#cnvs2d, xPos, yPos, 'magenta', this.bw*2/3, plyr.subPot);
-  }}
+  }
   drawButton(bttn) {
     const xPos = this.cvw - Math.sin(this.pa[bttn].ang) * (this.cvw*2/3);
   	const yPos = this.cvh + Math.cos(this.pa[bttn].ang) * (this.cvh*2/3);

@@ -20,4 +20,8 @@ class Raker extends Table {
     }
     this.#currBet = 0;
   }
+  payPot(winner) {
+    winner.chips += this.#pot;
+    this.#pot = 0;
+  }
 }

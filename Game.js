@@ -7,8 +7,8 @@ class Game extends Render {
     super(pc, cc, wf, mnbt, cf);
     this.#tblBar = new MenuBar(this, this.wp);
     this.#mnBar = new MenuBar(this, cnvsMenu);
-    this.#plyrBttn = this.pa.length-1;
-    this.#plyrTurn = 0;
+    this.#plyrBttn = 0;
+    this.#plyrTurn = this.#plyrBttn + 1;
     this.#allActed = false;
     this.refillPlyrsInHnd();
     this.#apr = false;
@@ -25,49 +25,53 @@ class Game extends Render {
     });
     this.#bttnObj = {};
     const elemObj =
-      [{s: 'fold', p: this.wp, t: 'button', c: 'foldBtn', x: 'Fold',
-        f: this.fold, a: [this, this.ap, this.#apr, this.#plyrBttn]},
-      {s: 'check', p: this.wp, t: 'button', c: 'checkBtn', x: 'Check',
-        f: this.check, a: [this, this.ap, this.#apr, this.#plyrBttn]},
-      {s: 'call', p: this.wp, t: 'button', c: 'callBtn', x: 'Call',
-        f: this.call, a: [this, this.ap, this.#apr, this.#plyrBttn]},
-      {s: 'bet', p: this.wp, t: 'button', c: 'betBtn', x: 'Bet',
-        f: this.bet, a: [this, this.ap, this.#apr, this.#plyrBttn]},
-      {s: 'raise', p: this.wp, t: 'button', c: 'raiseBtn', x: 'Raise',
-        f: this.bet, a: [this, this.ap, this.#apr, this.#plyrBttn]}];
+      [{s: 'fold', p: this.wp, t: 'button', c: 'foldBtn', x: 'Fold', f: this.fold, a: [this, this.ap]},
+      {s: 'check', p: this.wp, t: 'button', c: 'checkBtn', x: 'Check', f: this.check, a: [this, this.ap]},
+      {s: 'call', p: this.wp, t: 'button', c: 'callBtn', x: 'Call', f: this.call, a: [this, this.ap]},
+      {s: 'bet', p: this.wp, t: 'button', c: 'betBtn', x: 'Bet', f: this.bet, a: [this, this.ap]},
+      {s: 'raise', p: this.wp, t: 'button', c: 'raiseBtn', x: 'Raise', f: this.bet, a: [this, this.ap]}];
     let ind = 0;
     for (let {s, p, t, c=undefined, x=null, f=undefined, a=undefined} of elemObj) {
       this.#bttnObj[s] = crtElem(p, t, {cont: x, props: [{prop: 'className', val: c}],
         evnts:[{type: 'click', func: f, argLst: a}]});
     }
+    this.#bttnObj.fold.style.display = 'none';
+    this.#bttnObj.call.style.display = 'none';
+    this.#bttnObj.raise.style.display = 'none';
   }
   // Accessors
   get mb() {return this.#mnBar;}
+
   // Button Actions
-  check([sf, plyr, apr, bttn]) {
-    sf.endTurn();
-    sf.drawScene(apr, bttn);
-  }
-  fold([sf, plyr, apr, bttn]) {
+  check([sf, plyr]) {sf.endTurn();}
+  fold([sf, plyr]) {
     plyr.notInHand();
-    sf.check([sf, plyr, apr, bttn]);
+    sf.check([sf, plyr]);
   }
-  call([sf, plyr, apr, bttn]) {
+  call([sf, plyr]) {
     plyr.chips -= sf.currBet - plyr.callSize;
     plyr.subPot += sf.currBet - plyr.callSize;
     plyr.callSize = sf.currBet;
-    sf.check([sf, plyr, apr, bttn]);
+    sf.check([sf, plyr]);
   }
-  bet([sf, plyr, apr, bttn]) {
+  bet([sf, plyr]) {
     sf.currBet += plyr.betSize;
-    sf.call([sf, plyr, apr, bttn]);
+    sf.call([sf, plyr]);
   }
-  // Move Players Turn and Button
+
+  // Handling End of Turns, Rounds, and Hands
   endTurn() {
-    let allPaid = true;
-    for (let plyr of this.pa) {if (plyr.inHand && plyr.callSize !== this.currBet) {allPaid = false;}}
-    if (!this.#allActed || !allPaid) {this.nextPlayer();}
+    let plyrsLeft = [], allPaid = true;
+    for (let plyr of this.pa) {
+      if (plyr.inHand) {
+        plyrsLeft.push(plyr);
+        if (plyr.callSize !== this.currBet) {allPaid = false;}
+      }
+    }
+    if (plyrsLeft.length === 1) {this.nextHand(plyrsLeft[0]);}
+    else if (!this.#allActed || !allPaid) {this.nextPlayer();}
     else {this.nextRound();}
+    this.drawScene(this.#apr, this.#plyrBttn);
     this.runAI();
   }
   nextPlayer() {
@@ -91,41 +95,12 @@ class Game extends Render {
     }
     return firstAct;
   }
-  nextHand() {
-    this.#allActed = false;
+  nextHand(winner) {
     this.refillPlyrsInHnd();
     this.nextBttn();
     this.nextRound();
+    this.payPot(winner);
   }
-  refillPlyrsInHnd() {for (let plyr of this.pa) {plyr.isInHand();}}
-  nextBttn() {
-    this.#plyrBttn++;
-    if (this.#plyrBttn >= this.pa.length) {this.#plyrBttn = 0;}
-    this.drawScene(this.#apr, this.#plyrBttn);
-  }
-  jumpToBttn(bttn) {
-    if (bttn >= 0 && bttn < this.pa.length) {
-      this.#plyrBttn = bttn;
-      this.drawScene(this.#apr, this.#plyrBttn);
-    }
-  }
-  clearAllTurns() {for (let plyr of this.pa) {plyr.notTurn();}}
-  clearTurn() {this.pa[this.#plyrTurn].notTurn();}
-  nextTurn() {
-    do {
-      this.#plyrTurn++;
-      if (this.#plyrTurn >= this.pa.length) {this.#plyrTurn = 0;}
-      if (this.#plyrTurn === this.#plyrBttn) {this.#allActed = true;}
-    } while (!this.pa[this.#plyrTurn].inHand);
-    if (this.#allActed === true) {
-      let allPaid = true;
-      for (let plyr of this.pa) {if (plyr.inHand && plyr.callSize !== this.currBet) {allPaid = false;}}
-      if (allPaid) {this.nextRound();}
-    }
-  }
-  jumpToTurn(trn) {this.#plyrTurn = trn;}
-  setTurn() {this.pa[this.#plyrTurn].isTurn();}
-
   // Player AI
   runAI() {
     const actStr1 = ['check', 'bet'];
@@ -149,6 +124,40 @@ class Game extends Render {
       }
     }
   }
+
+  // Players in Hand Helper Function
+  refillPlyrsInHnd() {for (let plyr of this.pa) {plyr.isInHand();}}
+  // Button Moving Helper Functions
+  nextBttn() {
+    this.#plyrBttn++;
+    if (this.#plyrBttn >= this.pa.length) {this.#plyrBttn = 0;}
+  }
+  jumpToBttn(bttn) {if (bttn >= 0 && bttn < this.pa.length) {this.#plyrBttn = bttn;}}
+  // Turn Moving Helper Functions
+  clearAllTurns() {for (let plyr of this.pa) {plyr.notTurn();}}
+  clearTurn() {this.pa[this.#plyrTurn].notTurn();}
+  nextTurn() {
+    do {
+      this.#plyrTurn++;
+      if (this.#plyrTurn >= this.pa.length) {this.#plyrTurn = 0;}
+      if (this.#plyrTurn === this.#plyrBttn) {this.#allActed = true;}
+    } while (!this.pa[this.#plyrTurn].inHand);
+    if (this.#allActed === true) {
+      let allPaid = true;
+      for (let plyr of this.pa) {if (plyr.inHand && plyr.callSize !== this.currBet) {allPaid = false;}}
+      if (allPaid) {this.nextRound();}
+    }
+  }
+  jumpToTurn(trn) {
+    if (trn >= 0 && trn < this.pa.length) {
+      this.#plyrTurn = trn;
+      while (!this.pa[this.#plyrTurn].inHand) {
+        this.#plyrTurn++;
+        if (this.#plyrTurn >= this.pa.length) {this.#plyrTurn = 0;}
+      }
+    }
+  }
+  setTurn() {this.pa[this.#plyrTurn].isTurn();}
 
   // Resize and Redraw
   resizeAndDrawCanvas() {
